@@ -42,6 +42,7 @@ void BufferPoolManager::update_page(Page *page, PageId new_page_id, frame_id_t n
     if(page->is_dirty()){
         disk_manager_->write_page(page->get_page_id().fd,page->get_page_id().page_no,page->data_,PAGE_SIZE);
     }
+    
 }
 
 /**
