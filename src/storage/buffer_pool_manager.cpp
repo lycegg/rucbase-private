@@ -20,8 +20,12 @@ bool BufferPoolManager::find_victim_page(frame_id_t* frame_id) {
     // 1 使用BufferPoolManager::free_list_判断缓冲池是否已满需要淘汰页面
     // 1.1 未满获得frame
     // 1.2 已满使用lru_replacer中的方法选择淘汰页面
-
-    return false;
+    if(!free_list_.empty()){
+        *frame_id=free_list_.front();
+        free_list_.pop_front();
+        return true;
+    }
+    else return replacer_->victim(frame_id);
 }
 
 /**
@@ -35,7 +39,9 @@ void BufferPoolManager::update_page(Page *page, PageId new_page_id, frame_id_t n
     // 1 如果是脏页，写回磁盘，并且把dirty置为false
     // 2 更新page table
     // 3 重置page的data，更新page id
-
+    if(page->is_dirty()){
+        disk_manager_->write_page(page->get_page_id().fd,page->get_page_id().page_no,page->data_,PAGE_SIZE);
+    }
 }
 
 /**

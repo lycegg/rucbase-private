@@ -31,7 +31,9 @@ void DiskManager::write_page(int fd, page_id_t page_no, const char *offset, int 
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用write()函数
     // 注意write返回值与num_bytes不等时 throw InternalError("DiskManager::write_page Error");
-
+    lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
+    auto ret=write(fd,offset,num_bytes);
+    if(ret!=num_bytes)throw InternalError("DiskManager::write_page Error");
 }
 
 /**
@@ -46,6 +48,9 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用read()函数
     // 注意read返回值与num_bytes不等时，throw InternalError("DiskManager::read_page Error");
+    lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
+    auto ret=read(fd,offset,num_bytes);
+    if(ret!=num_bytes)throw InternalError("DiskManager::read_page Error");
 
 }
 
@@ -56,6 +61,7 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
  */
 page_id_t DiskManager::allocate_page(int fd) {
     // 简单的自增分配策略，指定文件的页面编号加1
+    if(fd < 0 || fd >= MAX_FD)printf("fd=%d\n",fd);
     assert(fd >= 0 && fd < MAX_FD);
     return fd2pageno_[fd]++;
 }
@@ -102,6 +108,13 @@ void DiskManager::create_file(const std::string &path) {
     // Todo:
     // 调用open()函数，使用O_CREAT模式
     // 注意不能重复创建相同文件
+    //path2fd_.find(path)!=path2fd_.end()
+    if(is_file(path))
+        throw FileExistsError("lyc_FileExistsError");
+    else open(path.c_str(),O_CREAT,0666);
+    //int fd=
+    //path2fd_[path]=fd;
+    //fd2path_[fd]=path;
 }
 
 /**
@@ -112,7 +125,14 @@ void DiskManager::destroy_file(const std::string &path) {
     // Todo:
     // 调用unlink()函数
     // 注意不能删除未关闭的文件
-    
+    //if(path2fd_.find(path)!=path2fd_.end())
+    if(!is_file(path))
+        throw FileNotFoundError("lyc_FileNotFoundError");
+    else unlink(path.c_str());
+    /*else if(unlink(path.c_str())==0){
+        fd2path_.erase(path2fd_[path]);
+        path2fd_.erase(path);
+    }*/
 }
 
 
@@ -125,6 +145,22 @@ int DiskManager::open_file(const std::string &path) {
     // Todo:
     // 调用open()函数，使用O_RDWR模式
     // 注意不能重复打开相同文件，并且需要更新文件打开列表
+    if(!is_file(path)){
+        throw FileNotFoundError("lyc_FileNotFoundError");
+        return -1;
+    }
+    else{
+        if(path2fd_.find(path)!=path2fd_.end()){
+            printf("T1asked%sreted%d\n",path.c_str(),path2fd_[path]);
+            return path2fd_[path];
+        } 
+        int fd=open(path.c_str(),O_RDWR);
+        printf("errno=%d\n",errno);
+        path2fd_[path]=fd;
+        fd2path_[fd]=path;
+        printf("T2asked%sreted%d\n",path.c_str(),fd);
+        return fd;
+    }
 
 }
 
@@ -136,7 +172,10 @@ void DiskManager::close_file(int fd) {
     // Todo:
     // 调用close()函数
     // 注意不能关闭未打开的文件，并且需要更新文件打开列表
-
+    if(fd2path_.find(fd)==fd2path_.end())return;
+    close(fd);
+    path2fd_.erase(fd2path_[fd]);
+    fd2path_.erase(fd);
 }
 
 
