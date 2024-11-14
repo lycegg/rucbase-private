@@ -33,7 +33,10 @@ void DiskManager::write_page(int fd, page_id_t page_no, const char *offset, int 
     // 注意write返回值与num_bytes不等时 throw InternalError("DiskManager::write_page Error");
     lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
     auto ret=write(fd,offset,num_bytes);
-    if(ret!=num_bytes)throw InternalError("DiskManager::write_page Error");
+    if(ret!=num_bytes){
+        printf("fd=%d,pageno=%d,ret=%d,num_bytes=%d",fd,page_no,(int)ret,num_bytes);
+        fflush(stdout);
+        throw InternalError("DiskManager::write_page Error");}
 }
 
 /**
@@ -48,9 +51,13 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用read()函数
     // 注意read返回值与num_bytes不等时，throw InternalError("DiskManager::read_page Error");
+    //printf("page_no=%d\n ",(int)page_no);
     lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
     auto ret=read(fd,offset,num_bytes);
-    if(ret!=num_bytes)throw InternalError("DiskManager::read_page Error");
+    if(ret!=num_bytes){
+        printf("fd=%d,pageno=%d,ret=%d,num_bytes=%d,max-1=%d",fd,page_no,(int)ret,num_bytes,(int)fd2pageno_[fd]);
+        fflush(stdout);
+        throw InternalError("DiskManager::read_page Error");}
 
 }
 
@@ -63,10 +70,13 @@ page_id_t DiskManager::allocate_page(int fd) {
     // 简单的自增分配策略，指定文件的页面编号加1
     if(fd < 0 || fd >= MAX_FD)printf("fd=%d\n",fd);
     assert(fd >= 0 && fd < MAX_FD);
+    //printf("alloc%d\n",fd);
     return fd2pageno_[fd]++;
 }
 
-void DiskManager::deallocate_page(__attribute__((unused)) page_id_t page_id) {}
+void DiskManager::deallocate_page(__attribute__((unused)) page_id_t page_id) {
+    throw InternalError("deallocate_page");
+}
 
 bool DiskManager::is_dir(const std::string& path) {
     struct stat st;
@@ -151,14 +161,14 @@ int DiskManager::open_file(const std::string &path) {
     }
     else{
         if(path2fd_.find(path)!=path2fd_.end()){
-            printf("T1asked%sreted%d\n",path.c_str(),path2fd_[path]);
+            //printf("T1asked%sreted%d\n",path.c_str(),path2fd_[path]);
             return path2fd_[path];
         } 
         int fd=open(path.c_str(),O_RDWR);
-        printf("errno=%d\n",errno);
+        //printf("errno=%d\n",errno);
         path2fd_[path]=fd;
         fd2path_[fd]=path;
-        printf("T2asked%sreted%d\n",path.c_str(),fd);
+        //printf("T2asked%sreted%d\n",path.c_str(),fd);
         return fd;
     }
 
