@@ -62,9 +62,9 @@ Rid RmFileHandle::insert_record(char* buf, Context* context) {
         }
         //printf("pg=%d\n",pg);
         //system("pause");
-    printf("before_head->%d\n",file_hdr_.first_free_page_no);
+    //printf("before_head->%d\n",file_hdr_.first_free_page_no);
         file_hdr_.first_free_page_no=pgh.page_hdr->next_free_page_no;
-    printf("after_head->%d\n",file_hdr_.first_free_page_no);
+    //printf("after_head->%d\n",file_hdr_.first_free_page_no);
         pg=file_hdr_.first_free_page_no;
         sleep(1);
         
@@ -162,9 +162,9 @@ RmPageHandle RmFileHandle::create_new_page_handle() {
     file_hdr_.num_pages++;
     auto ret=RmPageHandle(&file_hdr_, newpage);
     ret.page_hdr->next_free_page_no=file_hdr_.first_free_page_no;
-    printf("%d->%d\n",pgid.page_no,file_hdr_.first_free_page_no);
+    //printf("%d->%d\n",pgid.page_no,file_hdr_.first_free_page_no);
     file_hdr_.first_free_page_no=pgid.page_no;
-    printf("head->%d\n",file_hdr_.first_free_page_no);
+    //printf("head->%d\n",file_hdr_.first_free_page_no);
     ret.page_hdr->num_records=0;
     memset(ret.bitmap,0,file_hdr_.bitmap_size);
     //disk_manager_->write_page(fd_, RM_FILE_HDR_PAGE, (char *)&file_hdr_, sizeof(file_hdr_));

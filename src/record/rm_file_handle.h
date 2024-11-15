@@ -63,7 +63,7 @@ class RmFileHandle {
         disk_manager_->read_page(fd, RM_FILE_HDR_PAGE, (char *)&file_hdr_, sizeof(file_hdr_));
         // disk_manager管理的fd对应的文件中，设置从file_hdr_.num_pages开始分配page_no
         disk_manager_->set_fd2pageno(fd, file_hdr_.num_pages);
-        printf("set fd%d:pageno=%d\n",fd,file_hdr_.num_pages);
+        //printf("set fd%d:pageno=%d\n",fd,file_hdr_.num_pages);
         //file_hdr_.first_free_page_no=-1;//lyc
         //file_hdr_.num_pages=0;
         //printf("num_pages=%d\n",file_hdr_.num_pages);
