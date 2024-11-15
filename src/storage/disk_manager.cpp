@@ -31,6 +31,7 @@ void DiskManager::write_page(int fd, page_id_t page_no, const char *offset, int 
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用write()函数
     // 注意write返回值与num_bytes不等时 throw InternalError("DiskManager::write_page Error");
+    printf("write fd%d:page%d\n",fd,page_no);
     lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
     auto ret=write(fd,offset,num_bytes);
     if(ret!=num_bytes){
@@ -55,9 +56,18 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
     auto ret=read(fd,offset,num_bytes);
     if(ret!=num_bytes){
-        printf("fd=%d,pageno=%d,ret=%d,num_bytes=%d,max-1=%d",fd,page_no,(int)ret,num_bytes,(int)fd2pageno_[fd]);
+        printf("fd=%d,pageno=%d,ret=%d,num_bytes=%d,max=%d",fd,page_no,(int)ret,num_bytes,(int)fd2pageno_[fd]);
         fflush(stdout);
-        throw InternalError("DiskManager::read_page Error");}
+        /*char nw[num_bytes];
+        memset(nw,0,sizeof(nw));
+        write_page(fd,page_no,nw,num_bytes);
+        
+        lseek(fd,page_no*PAGE_SIZE,SEEK_SET);
+        auto ret=read(fd,offset,num_bytes);
+        
+        if(ret!=num_bytes)*/
+            throw InternalError("DiskManager::read_page Error");
+    }
 
 }
 

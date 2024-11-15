@@ -18,7 +18,9 @@ See the Mulan PSL v2 for more details. */
 RmScan::RmScan(const RmFileHandle *file_handle) : file_handle_(file_handle) {
     // Todo:
     // 初始化file_handle和rid（指向第一个存放了记录的位置）
-
+    rid_.page_no=1;
+    rid_.slot_no=-1;
+    next();
 }
 
 /**
@@ -27,7 +29,22 @@ RmScan::RmScan(const RmFileHandle *file_handle) : file_handle_(file_handle) {
 void RmScan::next() {
     // Todo:
     // 找到文件中下一个存放了记录的非空闲位置，用rid_来指向这个位置
-
+    rid_.slot_no++;
+    if(rid_.slot_no>=file_handle_->file_hdr_.num_records_per_page){
+        rid_.page_no++;
+        rid_.slot_no-=file_handle_->file_hdr_.num_records_per_page;
+    }
+    while(!is_end()){
+        if(file_handle_->is_record(rid_)){
+            //printf("found%d:%d\n",rid_.page_no,rid_.slot_no);
+            return;}
+        rid_.slot_no++;
+        if(rid_.slot_no>=file_handle_->file_hdr_.num_records_per_page){
+            rid_.page_no++;
+            rid_.slot_no-=file_handle_->file_hdr_.num_records_per_page;
+        }
+    }
+    //printf("not found\n");
 }
 
 /**
@@ -35,7 +52,7 @@ void RmScan::next() {
  */
 bool RmScan::is_end() const {
     // Todo: 修改返回值
-
+    if(rid_.page_no>=file_handle_->file_hdr_.num_pages)return true;
     return false;
 }
 
@@ -43,5 +60,6 @@ bool RmScan::is_end() const {
  * @brief RmScan内部存放的rid
  */
 Rid RmScan::rid() const {
+    //printf("rid=%d,%d\n",rid_.page_no,rid_.slot_no);
     return rid_;
 }
